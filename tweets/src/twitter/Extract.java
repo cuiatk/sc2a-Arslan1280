@@ -3,6 +3,11 @@
  */
 package twitter;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.regex.*;
+import java.util.regex.Pattern;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +19,7 @@ import java.util.Set;
  * private methods or classes if you like.
  */
 public class Extract {
-
+	
     /**
      * Get the time period spanned by tweets.
      * 
@@ -24,7 +29,15 @@ public class Extract {
      *         every tweet in the list.
      */
     public static Timespan getTimespan(List<Tweet> tweets) {
-        throw new RuntimeException("not implemented");
+    	if(tweets.isEmpty())
+    		return new Timespan(Instant.now(), Instant.now());
+    	else
+    	{
+        	Instant start = tweets.get(0).getTimestamp();
+            Instant end = tweets.get(tweets.size()-1).getTimestamp();
+            Timespan t = new Timespan(start,end);
+            return t;    		
+    	}
     }
 
     /**
@@ -43,7 +56,21 @@ public class Extract {
      *         include a username at most once.
      */
     public static Set<String> getMentionedUsers(List<Tweet> tweets) {
-        throw new RuntimeException("not implemented");
+    	Pattern pattern = Pattern.compile("@(\\w+)");		// https://stackoverflow.com/questions/7150652/regex-valid-twitter-mention
+        Set<String> mentionedUserSet = new HashSet<String>();
+        for (Tweet tweet : tweets)
+        {
+        	List<String> mentionedUsers = new ArrayList<String>();
+            String tweetText = tweet.getText();
+            Matcher matcher = pattern.matcher(tweetText);
+            
+            while(matcher.find())
+            {
+                mentionedUsers.add(matcher.group(1));
+            }
+            mentionedUserSet.addAll(mentionedUsers);
+        }
+        return mentionedUserSet;
     }
 
 }

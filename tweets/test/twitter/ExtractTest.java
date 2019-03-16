@@ -4,7 +4,9 @@
 package twitter;
 
 import static org.junit.Assert.*;
-
+import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Set;
@@ -19,11 +21,15 @@ public class ExtractTest {
      * Make sure you have partitions.
      */
     
-    private static final Instant d1 = Instant.parse("2016-02-17T10:00:00Z");
+	private static final Instant d1 = Instant.parse("2016-02-17T10:00:00Z");
     private static final Instant d2 = Instant.parse("2016-02-17T11:00:00Z");
+    private static final Instant d3 = Instant.parse("2016-02-17T12:00:00Z");
+    private static final Instant d4 = Instant.parse("2016-02-17T13:00:00Z");
     
     private static final Tweet tweet1 = new Tweet(1, "alyssa", "is it reasonable to talk about rivest so much?", d1);
     private static final Tweet tweet2 = new Tweet(2, "bbitdiddle", "rivest talk in 30 minutes #hype", d2);
+    private static final Tweet tweet3 = new Tweet(3, "alyssa", "@is it reasonable to talk about rivest so much?", d3);
+    private static final Tweet tweet4 = new Tweet(4, "bbitdiddle", "@rivest @talk in 30 minutes #hype", d4);
     
     @Test(expected=AssertionError.class)
     public void testAssertionsEnabled() {
@@ -39,12 +45,69 @@ public class ExtractTest {
     }
     
     @Test
+    public void testGetTimespanEmptyTweet() {
+        Timespan timespan = Extract.getTimespan(new ArrayList<Tweet>());
+        
+        assertEquals(timespan.getStart(), timespan.getEnd());
+    }
+    
+    @Test
+    public void testGetTimespanOneTweet() {
+        Timespan timespan = Extract.getTimespan(Arrays.asList(tweet1));
+        
+        assertEquals("expected start", d1, timespan.getStart());
+        assertEquals("expected end", d1, timespan.getEnd());
+    }
+    
+    @Test
+    public void testGetTimespanThreeTweet() {
+        Timespan timespan = Extract.getTimespan(Arrays.asList(tweet1, tweet2, tweet3));
+        
+        assertEquals("expected start", d1, timespan.getStart());
+        assertEquals("expected end", d3, timespan.getEnd());
+    }
+    
+    @Test
+    public void testGetTimespanFourTweet() {
+        Timespan timespan = Extract.getTimespan(Arrays.asList(tweet1, tweet2, tweet3, tweet4));
+        
+        assertEquals("expected start", d1, timespan.getStart());
+        assertEquals("expected end", d4, timespan.getEnd());
+    }
+    
+    @Test
     public void testGetMentionedUsersNoMention() {
         Set<String> mentionedUsers = Extract.getMentionedUsers(Arrays.asList(tweet1));
         
         assertTrue("expected empty set", mentionedUsers.isEmpty());
     }
 
+    @Test
+    public void testGetMentionedUsersOneMention() {
+        Set<String> mentionedUsers = Extract.getMentionedUsers(Arrays.asList(tweet3));
+        Set<String> mentionedUserSet = new HashSet<>();
+        
+        for(String mentionedUser : mentionedUsers)
+        {
+        	mentionedUserSet.add(mentionedUser);
+        }
+        
+        assertTrue(mentionedUserSet.contains("is"));
+    }
+    
+    @Test
+    public void testGetMentionedUsersTwoMention() {
+        Set<String> mentionedUsers = Extract.getMentionedUsers(Arrays.asList(tweet4));
+        Set<String> mentionedUserSet = new HashSet<>();
+        
+        for(String mentionedUser : mentionedUsers)
+        {
+        	mentionedUserSet.add(mentionedUser);
+        }
+        
+        assertTrue(mentionedUserSet.containsAll(Arrays.asList("rivest","talk")));
+    }
+    
     /*
      * Warning: all the tests you write here must be runnable against any
      * Extract class that follows the spec. It will be run against several staff
